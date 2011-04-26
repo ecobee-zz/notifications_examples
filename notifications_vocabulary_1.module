@@ -37,7 +37,7 @@ function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NU
     // which a user will recieve a notification. It relies an event type and
     // one or more fields (see below).
     case 'subscription types' :
-      dsm( 'hook_notifications : subscription types' );
+      //dsm( 'hook_notifications : subscription types' );
     
       $types['vocabulary'] = array(
 
@@ -71,7 +71,7 @@ function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NU
     // a piece of content as suitable for triggering notifications for a given
     // subscription.
     case 'subscription fields' :
-      dsm( 'hook_notifications : subscription fields' );
+      //dsm( 'hook_notifications : subscription fields' );
     
       $fields['vocabulary'] = array(
       
@@ -127,7 +127,7 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
     // from the relevant content, which the notifications system can compare to
     // subscriptions in order to determine whether to trigger a notification.
     case 'conditions':
-      dsm( 'hook_notifications_object_node : conditions' );
+      //dsm( 'hook_notifications_object_node : conditions' );
 
       $conditions = array();
 //      dsm( $node );
@@ -150,7 +150,7 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
     // NOTE: The 'Vocabulary' subscription type will still function if this op
     // is commented out. 
     case 'subscriptions':
-      dsm( 'hook_notifications_object_node : subscriptions' );
+      //dsm( 'hook_notifications_object_node : subscriptions' );
     
       $options = array();
       if ( notifications_subscription_type_enabled('vocabulary') ) {
