@@ -1,0 +1,6 @@
+; $Id
+name = Notifications vocabulary 2
+description = A slightly more complex taxonomy vocabulary subscription type.
+package = "Notifications examples"
+dependencies[] = notifications_content
+core = 6.x
