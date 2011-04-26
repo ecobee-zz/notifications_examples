@@ -111,15 +111,22 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
 
   switch ($op) {
     
-    
+    // This op is called whenever an event, of an event type known to the
+    // notifications system, occurs. Our module gets the chance to extract data
+    // from the relevant content, which the notifications system can compare to
+    // subscriptions in order to determine whether to trigger a notification.
     case 'conditions':
 
       $conditions = array();
 
-      // At the time that this hook op is called, $node->taxonomy is just an
-      // array of taxonomy term IDs.
+      // NOTE: At the time that this hook op is called, $node->taxonomy is just
+      // an array of taxonomy term IDs.
       foreach ( $node->taxonomy as $tid ) {
         $term = taxonomy_get_term( $tid );
+        
+        // The only subscription field we are concerned with is 'vocabulary' so
+        // we are extracting all vocabularies from which this node has been
+        // tagged.
         $conditions['vocabulary'][] = $term->vid;
       }
 
@@ -127,25 +134,39 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
 
     break;
 
+    // This op is called in order to present the user with a set of subscription
+    // (and unsubscription) links relevant to the content that they are viewing.
+    // NOTE: The 'Vocabulary' subscription type will still function if this op
+    // is commented out. 
     case 'subscriptions':
     
-      // Return available subscription options for this node and this user account
       $options = array();
-      if (notifications_subscription_type_enabled('vocabulary')) {
+      if ( notifications_subscription_type_enabled('vocabulary') ) {
         
         $vids = array();
 
-        // At the time that this hook op is called, $node->taxonomy is an array
-        // of taxonomy term objects.
+        // NOTE: At the time that this hook op is called, $node->taxonomy is an
+        // array of taxonomy term objects.
         foreach( $node->taxonomy as $term ) {
           $vids[$term->vid] = $term->vid;
         }
         
-        foreach ( $node->taxonomy as $term ) {
-          $vocab = taxonomy_vocabulary_load( $term->vid );
+        // For each vocabulary from which the current content is tagged, give
+        // the notifications system enough information to present the user with
+        // (un)subscribe links.
+        foreach ( $vids as $vid ) {
+          $vocab = taxonomy_vocabulary_load( $vid );
           $options[] = array(
+            
+            // The text of the link to be shown to the user
             'name' => t('Posts tagged from vocabulary "@vocab"', array('@vocab' => $vocab->name )),
+            
+            // The relevant subscription type. (The notifications system will
+            // create a subscription in response to a click on the link.)
             'type' => 'vocabulary',
+            
+            // The relevant subscription fields (only one in our case) and the
+            // value for each field that will be used to create a subscription.
             'fields' => array('vocabulary' => $vid),
           );
         }
@@ -155,77 +176,3 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
     break;
   }
 }
-
-
-  /**
-   * Implementation of hook_notifications.
-   *
-   * Implements a new subscription type for a given Topic in a given group.
-   */
-  function hoky_notifications($op, &$arg0 = NULL, $arg1 = NULL, $arg2 = NULL) {
-
-    switch ($op) {
-      case 'subscription types' :
-      
-        $types['network_topic'] = array(
-        
-          'event_type' => 'node',
-          
-          'title' => t('Network topic'),
-          
-          // New permission must be defined in a hook_perm
-          'access' => 'subscribe to network topic',
-          
-          // A page for a user to manage their Network topic subscriptions.
-          // The same path must also be defined by a menu item in a hook_menu.
-          'user page' => 'user/%user/notifications/network_topic',
-          
-          // These are the condition fields this subscription needs, in this case just the vid
-          'fields' => array( /*'network',*/ 'topic'),
-          
-          'description' => t('Subscribe to content, in a given network, tagged with a specific term.'),
-        );
-        return $types;
-
-      break;
-      
-      case 'subscription fields' :
-      
-        $fields['network'] = array(
-        
-          'name' => t('Network'),
-          
-          // Okay this seems a bit recursive; a field within a field.
-          // I'm going to assume for now that this is the "machine name" of the field.
-          'field' => 'network',
-          
-          // A very raw exposure to type?!
-          'type' => 'int',
-          
-          // This one should return an array of vid => name. Wil be used when displaying the subscription for naming the value
-          // and for a drop down field when creating a subscription with this field
-          'options callback' => '_vocabulary_notifications_options',
-        );
-        return $fields;
-      
-      break;
-    }
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
