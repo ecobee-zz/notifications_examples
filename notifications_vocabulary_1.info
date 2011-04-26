@@ -2,5 +2,5 @@
 name = Notifications vocabulary 1
 description = A very simple example of how to define a subscription-type in code. The only non-essential code is a few lines for adding subscribe links to nodes.
 package = "Notifications examples"
-dependencies[] = notifications
+dependencies[] = notifications_content
 core = 6.x

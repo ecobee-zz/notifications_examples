@@ -15,33 +15,71 @@
  *
  * Defines a vocabulary subscription type and its single field, also called
  * vocabulary.
- * 
  */
 function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NULL, $arg2 = NULL) {
 
   switch ($op) {
+
+    // This op gives the programmer the chance to define one or more
+    // subscription types. A subscription type defines the conditions under
+    // which a user will recieve a notification. It relies an event type and
+    // one or more fields (see below).
     case 'subscription types' :
       //dsm( 'subscription types' );
     
       $types['vocabulary'] = array(
-        'event_type' => 'node',  // This will be for node events (insert, update, comment...)
+
+        // This subscription type will create a notifications of 'node' events.
+        // Point of interest: Three 'node' events (insert, update, comment) are
+        // defined in the notifications_content module, in the 'event types' op
+        // of the hook_notifications implementation.
+        'event_type' => 'node',
+        
+        // This subscription type will be presented to the user as 'Vocabulary'
+        // (at least in English).
         'title' => t('Vocabulary'),
-        'fields' => array('vocabulary'), // These are the condition fields this subscription needs, in this case just the vid
+        
+        // This module defines a single subscription field ('vocabulary') and
+        // that that field is used by this subscription type.
+        // See the 'subscription fields' op below for a description of what a
+        // subscription field is.
+        'fields' => array('vocabulary'),
+        
+        // Where appropriate, a user will see this description of the
+        // 'vocabulary' description type (at least in English).
         'description' => t('Subscribe to all content tagged with a term of a vocabulary.'),
       );
+
       return $types;
 
     break;
     
+    // This op gives the programmer the chance to define one or more
+    // subscription fields. A subscription field defines a property that marks
+    // a piece of content as suitable for triggering notifications for a given
+    // subscription.
     case 'subscription fields' :
       //dsm( 'subscription fields' );
     
       $fields['vocabulary'] = array(
+      
+        // This subscription field will be presented to the user as 'Vocabulary'
+        // (at least in English).
         'name' => t('Vocabulary'),
-        'field' => 'vocabulary', // This seems to relate to case 'query'. See below in this fn.
+        
+        // @todo  - play with the name supplied here to see what and the name of
+        // the subscription field to see what effect they have on behaviour: At
+        // the moment, it looks like our field has a field. Is this the case or
+        // is this used for the name of the field rather than 'vacabulary' key
+        // above?
+        'field' => 'vocabulary',
+        
+        // The type of value that this field should contain. A PHP type.
         'type' => 'int',
-        // This one should return an array of vid => name. Wil be used when displaying the subscription for naming the value
-        // and for a drop down field when creating a subscription with this field
+        
+        // A callback function that will return an array of options for this
+        // field. Each option should have an key of the type we have just
+        // defined (above) and a descriptive value for the benefit of users.
         'options callback' => '_notifications_vocabulary_1_vocabulary_field_options',
       );
       return $fields;
@@ -69,9 +107,11 @@ function _notifications_vocabulary_1_vocabulary_field_options() {
  * Implementation of hook_notifications_object_node()
  */
 function notifications_vocabulary_1_notifications_object_node($op, $node, $account = NULL) {
-  dsm( 'notifications_vocabulary_1_content_notifications_object_node - ' . $op );
+//  dsm( 'notifications_vocabulary_1_content_notifications_object_node - ' . $op );
 
   switch ($op) {
+    
+    
     case 'conditions':
 
       $conditions = array();
@@ -129,7 +169,6 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
       
         $types['network_topic'] = array(
         
-          // This will be for node events (insert, update, comment...)
           'event_type' => 'node',
           
           'title' => t('Network topic'),
