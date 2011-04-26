@@ -15,9 +15,9 @@
  *
  * Implements a new subscription type for a given Topic in a given group.
  */
-function ecobee_notifications_notifications($op, &$arg0 = NULL, $arg1 = NULL, $arg2 = NULL) {
+function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NULL, $arg2 = NULL) {
 
-dsm( 'ecobee_notifications_notifications - ' . $op );
+dsm( 'notifications_vocabulary_1_notifications - ' . $op );
 
   switch ($op) {
     case 'subscription types' :
@@ -58,8 +58,8 @@ dsm( 'ecobee_notifications_notifications - ' . $op );
         //'load callback' => 'taxonomy_vocabulary_load',
 ////        'autocomplete path' => 'notifications/autocomplete/node/title',
 ////        'autocomplete callback' => 'notifications_node_nid2autocomplete',
-        //'format callback' => 'ecobee_notifications_vid2name',
-        //'value callback' => 'ecobee_notifications_name2vid',
+        //'format callback' => 'notifications_vocabulary_1_vid2name',
+        //'value callback' => 'notifications_vocabulary_1_name2vid',
 ////        'access callback' => 'notifications_node_user_access',
 ////        'file' => 'node.inc',
       //);     
@@ -113,8 +113,8 @@ dsm( 'ecobee_notifications_notifications - ' . $op );
 /**
  * Implementation of hook_notifications_object_node()
  */
-function ecobee_notifications_notifications_object_node($op, $node, $account = NULL) {
-  dsm( 'ecobee_notifications_content_notifications_object_node - ' . $op );
+function notifications_vocabulary_1_notifications_object_node($op, $node, $account = NULL) {
+  dsm( 'notifications_vocabulary_1_content_notifications_object_node - ' . $op );
 
   switch ($op) {
     case 'conditions':
@@ -135,7 +135,7 @@ function ecobee_notifications_notifications_object_node($op, $node, $account = N
       $options = array();
       if (notifications_subscription_type_enabled('vocabulary')) {
         
-        $vids = _ecobee_notifications_get_vids( $node );
+        $vids = _notifications_vocabulary_1_get_vids( $node );
         
         foreach ( $node->taxonomy as $term ) {
           $vocab = taxonomy_vocabulary_load( $term->vid );
@@ -153,15 +153,15 @@ function ecobee_notifications_notifications_object_node($op, $node, $account = N
 }
 
 
-function ecobee_notifications_vid2name( $vid ) {
-  dsm( 'ecobee_notifications_vid2name' );
+function notifications_vocabulary_1_vid2name( $vid ) {
+  dsm( 'notifications_vocabulary_1_vid2name' );
 }
 
-function ecobee_notifications_name2vid( $name ) {
-  dsm( 'ecobee_notifications_name2vid' );
+function notifications_vocabulary_1_name2vid( $name ) {
+  dsm( 'notifications_vocabulary_1_name2vid' );
 }
 
-function _ecobee_notifications_get_vids( $node ) {
+function _notifications_vocabulary_1_get_vids( $node ) {
   $vids = array();
   foreach( $node->taxonomy as $term ) {
     $vids[$term->vid] = $term->vid;
