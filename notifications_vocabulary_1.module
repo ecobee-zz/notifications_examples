@@ -44,7 +44,7 @@ dsm( 'notifications_vocabulary_1_notifications - ' . $op );
         'type' => 'int',
         // This one should return an array of vid => name. Wil be used when displaying the subscription for naming the value
         // and for a drop down field when creating a subscription with this field
-        'options callback' => '_vocabulary_notifications_options',
+        'options callback' => '_notifications_vocabulary_1_vocabulary_field_options',
       );
       return $fields;
     
@@ -108,6 +108,21 @@ dsm( 'notifications_vocabulary_1_notifications - ' . $op );
       
     break;
   }
+}
+
+/**
+ * Get a list of possible options for the 'vocabulary' subscription field.
+ * 
+ * @return
+ *   An array of all vocabularies in the form ( vid => name )
+ */
+function _notifications_vocabulary_1_vocabulary_field_options() {
+  $vocabs = taxonomy_get_vocabularies();
+  $options = array();
+  foreach ( $vocabs as $vocab ) {
+    $options[$vocab->vid] = $vocab->name;
+  }
+  return $options;
 }
 
 /**
