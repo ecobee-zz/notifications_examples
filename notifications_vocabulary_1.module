@@ -120,11 +120,14 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
     case 'conditions':
 
       $conditions = array();
+
+      // At the time that this hook op is called, $node->taxonomy is just an
+      // array of taxonomy term IDs.
       foreach ( $node->taxonomy as $tid ) {
         $term = taxonomy_get_term( $tid );
         $conditions['vocabulary'][] = $term->vid;
       }
-      dsm( $conditions );
+
       return $conditions;
 
     break;
@@ -135,7 +138,13 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
       $options = array();
       if (notifications_subscription_type_enabled('vocabulary')) {
         
-        $vids = _notifications_vocabulary_1_get_vids( $node );
+        $vids = array();
+
+        // At the time that this hook op is called, $node->taxonomy is an array
+        // of taxonomy term objects.
+        foreach( $node->taxonomy as $term ) {
+          $vids[$term->vid] = $term->vid;
+        }
         
         foreach ( $node->taxonomy as $term ) {
           $vocab = taxonomy_vocabulary_load( $term->vid );
@@ -152,22 +161,6 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
   }
 }
 
-
-function notifications_vocabulary_1_vid2name( $vid ) {
-  dsm( 'notifications_vocabulary_1_vid2name' );
-}
-
-function notifications_vocabulary_1_name2vid( $name ) {
-  dsm( 'notifications_vocabulary_1_name2vid' );
-}
-
-function _notifications_vocabulary_1_get_vids( $node ) {
-  $vids = array();
-  foreach( $node->taxonomy as $term ) {
-    $vids[$term->vid] = $term->vid;
-  }
-  return $vids;
-}
 
   /**
    * Implementation of hook_notifications.
