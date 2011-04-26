@@ -37,7 +37,7 @@ function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NU
     // which a user will recieve a notification. It relies an event type and
     // one or more fields (see below).
     case 'subscription types' :
-      //dsm( 'subscription types' );
+      dsm( 'hook_notifications : subscription types' );
     
       $types['vocabulary'] = array(
 
@@ -71,7 +71,7 @@ function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NU
     // a piece of content as suitable for triggering notifications for a given
     // subscription.
     case 'subscription fields' :
-      //dsm( 'subscription fields' );
+      dsm( 'hook_notifications : subscription fields' );
     
       $fields['vocabulary'] = array(
       
@@ -79,8 +79,8 @@ function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NU
         // (at least in English).
         'name' => t('Vocabulary'),
         
-        // @todo  - play with the name supplied here to see what and the name of
-        // the subscription field to see what effect they have on behaviour: At
+        // @todo  - play with the name supplied here and the name of the
+        // subscription field key to see what effect they have on behaviour: At
         // the moment, it looks like our field has a field. Is this the case or
         // is this used for the name of the field rather than 'vacabulary' key
         // above?
@@ -119,7 +119,6 @@ function _notifications_vocabulary_1_vocabulary_field_options() {
  * Implementation of hook_notifications_object_node()
  */
 function notifications_vocabulary_1_notifications_object_node($op, $node, $account = NULL) {
-//  dsm( 'notifications_vocabulary_1_content_notifications_object_node - ' . $op );
 
   switch ($op) {
     
@@ -128,18 +127,18 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
     // from the relevant content, which the notifications system can compare to
     // subscriptions in order to determine whether to trigger a notification.
     case 'conditions':
+      dsm( 'hook_notifications_object_node : conditions' );
 
       $conditions = array();
+//      dsm( $node );
 
-      // NOTE: At the time that this hook op is called, $node->taxonomy is just
-      // an array of taxonomy term IDs.
-      foreach ( $node->taxonomy as $tid ) {
-        $term = taxonomy_get_term( $tid );
-        
+      $vids = _notifications_vocabulary_1_get_vocabulary_ids_from_node( $node );
+
+      foreach ( $vids as $vid ) {
         // The only subscription field we are concerned with is 'vocabulary' so
         // we are extracting all vocabularies from which this node has been
         // tagged.
-        $conditions['vocabulary'][] = $term->vid;
+        $conditions['vocabulary'][] = $vid;
       }
 
       return $conditions;
@@ -151,17 +150,12 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
     // NOTE: The 'Vocabulary' subscription type will still function if this op
     // is commented out. 
     case 'subscriptions':
+      dsm( 'hook_notifications_object_node : subscriptions' );
     
       $options = array();
       if ( notifications_subscription_type_enabled('vocabulary') ) {
         
-        $vids = array();
-
-        // NOTE: At the time that this hook op is called, $node->taxonomy is an
-        // array of taxonomy term objects.
-        foreach( $node->taxonomy as $term ) {
-          $vids[$term->vid] = $term->vid;
-        }
+        $vids = _notifications_vocabulary_1_get_vocabulary_ids_from_node( $node );
         
         // For each vocabulary from which the current content is tagged, give
         // the notifications system enough information to present the user with
@@ -174,11 +168,12 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
             'name' => t('Posts tagged from vocabulary "@vocab"', array('@vocab' => $vocab->name )),
             
             // The relevant subscription type. (The notifications system will
-            // create a subscription in response to a click on the link.)
+            // create a subscription of this type in response to a click on the
+            // link.)
             'type' => 'vocabulary',
             
             // The relevant subscription fields (only one in our case) and the
-            // value for each field that will be used to create a subscription.
+            // value for each field to be used to create the subscription.
             'fields' => array('vocabulary' => $vid),
           );
         }
@@ -188,3 +183,52 @@ function notifications_vocabulary_1_notifications_object_node($op, $node, $accou
     break;
   }
 }
+
+/**
+ * Gets the vocabularies IDs of any taxonomy terms associated with a node.
+ * 
+ * @param $node
+ *   A node object
+ *
+ * @return
+ *   An array, either empty or containing vocabulary IDs ( vid => vid ).
+ */
+function _notifications_vocabulary_1_get_vocabulary_ids_from_node( $node ) {
+ 
+  // Does the node have no taxonomy terms associated with it?
+  if ( ! isset( $node->taxonomy )
+       ||  ! is_array( $node->taxonomy )
+       ||  empty( $node->taxonomy ) ) {
+    return array();
+  }
+  
+  $result = array();
+  
+  foreach ( $node->taxonomy as $term ) {
+
+    // Is the current term an object?
+    if ( ! is_object( $term ) ) {
+      // As the term is not an object, assume it is a term ID and load the
+      // relevant term object.
+      $term = taxonomy_get_term( $term );
+    }
+
+    $result[$term->vid] = $term->vid;
+  }
+  
+  return $result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
