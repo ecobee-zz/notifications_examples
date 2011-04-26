@@ -82,8 +82,8 @@ function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NU
         // @todo  - play with the name supplied here and the name of the
         // subscription field key to see what effect they have on behaviour: At
         // the moment, it looks like our field has a field. Is this the case or
-        // is this used for the name of the field rather than 'vacabulary' key
-        // above?
+        // is this used for the name of the field rather than the 'vocabulary'
+        // key above?
         'field' => 'vocabulary',
         
         // The type of value that this field should contain. A PHP type.
@@ -206,10 +206,9 @@ function _notifications_vocabulary_1_get_vocabulary_ids_from_node( $node ) {
   
   foreach ( $node->taxonomy as $term ) {
 
-    // Is the current term an object?
     if ( ! is_object( $term ) ) {
-      // As the term is not an object, assume it is a term ID and load the
-      // relevant term object.
+      // As the term is not an object, assume it is a term ID and use it to
+      // load the relevant term object.
       $term = taxonomy_get_term( $term );
     }
 
