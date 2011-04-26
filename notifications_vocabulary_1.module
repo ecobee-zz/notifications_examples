@@ -2,22 +2,22 @@
 
 /**
  * @file
- * Ecobee notifications
+ * Defines a Notifications vocabulary subscription type, very minimally.
+ *
+ * We could actually do without the 'subscriptions' $op of the
+ * hook_notifications_node_object(). This is left in because it adds a bit of
+ * interface (subscription links in nodes) that our audience may previously
+ * have used as their main subscription method.
  */
-
-/**
- * Implementation of hook_perm
- */
-
 
 /**
  * Implementation of hook_notifications.
  *
- * Implements a new subscription type for a given Topic in a given group.
+ * Defines a vocabulary subscription type and its single field, also called
+ * vocabulary.
+ * 
  */
 function notifications_vocabulary_1_notifications($op, &$arg0 = NULL, $arg1 = NULL, $arg2 = NULL) {
-
-dsm( 'notifications_vocabulary_1_notifications - ' . $op );
 
   switch ($op) {
     case 'subscription types' :
@@ -26,8 +26,6 @@ dsm( 'notifications_vocabulary_1_notifications - ' . $op );
       $types['vocabulary'] = array(
         'event_type' => 'node',  // This will be for node events (insert, update, comment...)
         'title' => t('Vocabulary'),
-        'access' => 'subscribe to vocabulary', // New permission must be created somewhere else
-        'user page' => 'user/%user/notifications/vocabulary', // Menu item for a page that must be defined somewhere else
         'fields' => array('vocabulary'), // These are the condition fields this subscription needs, in this case just the vid
         'description' => t('Subscribe to all content tagged with a term of a vocabulary.'),
       );
@@ -48,64 +46,6 @@ dsm( 'notifications_vocabulary_1_notifications - ' . $op );
       );
       return $fields;
     
-    break;
-
-   case 'object types':
-      //notifications_include('object.inc');
-      //$types['vocabulary'] = array(
-        //'name' => t('Vocabulary'),
-        //'key_field' => 'vocabulary',
-        //'load callback' => 'taxonomy_vocabulary_load',
-////        'autocomplete path' => 'notifications/autocomplete/node/title',
-////        'autocomplete callback' => 'notifications_node_nid2autocomplete',
-        //'format callback' => 'notifications_vocabulary_1_vid2name',
-        //'value callback' => 'notifications_vocabulary_1_name2vid',
-////        'access callback' => 'notifications_node_user_access',
-////        'file' => 'node.inc',
-      //);     
-      //return $types;
-    break;
-    
-    case 'query' :
-      //dsm( 'query' );
-  
-      if ( $arg0 === 'event' && $arg1 === 'node' ) { 
-        // (3)
-        $event = $arg2;
-        $node = $event->objects['node']; // This object will have been loaded by notifications_content
-        $vids = mycustomfunction_get_vids_for_a_node($node); // We will get an array of vids for the node
-        $query[]['fields']['vocabulary'] = $vids;
-        return $query; // With these values, the query builder will build the query to match this conditions
-      } else if ( $arg0 === 'node' ) {
-        // If we want to display these options for nodes as node links, we can add some more. These are extensions handled by notifications_content module, not by notifications itself.
-        // To query enabled subscriptions of this type for a node, we need to implement hook_notifications('query', 'node', $node). Will be the same as the one in (3)
-        //$event = $arg1;
-        //$node = $event->objects['node']; // This object will have been loaded by notifications_content
-        //$vids = mycustomfunction_get_vids_for_a_node($node); // We will get an array of vids for the node
-        //$query[]['fields']['vocabulary'] = $vids;
-        //return $query; // With these values, the query builder will build the query to match this conditions
-      }
-      
-    break;
-    
-    case 'node options' :
-    
-      //$account = $arg0;
-      //$node = $arg1;
-      //// First we check these subscriptions are enabled for this content type (notifications_content module)
-      //if (notifications_content_type_enabled($node->type, 'vocabulary')) {
-         //// For each vocabulary linked to the node, we need to return one of this:
-         //foreach ($vocabularies as $vocabulary) {
-           //$options[] = array(
-             //'name' => t('Vocabulary @name'),
-             //'type' => 'vocabulary',
-             //'fields' => array('vocabulary' => $vocabulary->vid),
-          //);
-        //}
-        //return $options;
-      //}
-      // This will produce, with the help of notifications_ui module, one link for each vocabulary the node is in like "Subscribe to Vocabulary 1", "Unsubscribe to vocabulary 2", etc...
-      
     break;
   }
 }
