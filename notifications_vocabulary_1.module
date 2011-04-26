@@ -4,10 +4,22 @@
  * @file
  * Defines a Notifications vocabulary subscription type, very minimally.
  *
- * We could actually do without the 'subscriptions' $op of the
- * hook_notifications_node_object(). This is left in because it adds a bit of
- * interface (subscription links in nodes) that our audience may previously
- * have used as their main subscription method.
+ * Steps implemented here to define a subscription:
+ *  - Define a subscription type
+ *  - Define a subscription field
+ *  - Extract 'conditions' from relevant content to allow the notifications
+ *    system to determine when a notification is required.
+ * 
+ * Other, less vital, steps implemented:
+ *  - Extract subscriptions relevant to current content to allow the
+ *    notifications system to present (un)subscribe links to the user.
+ *    This is included because it adds UI (subscription links in nodes) that
+ *    our audience might use as their main subscription method.
+ * 
+ * Steps *not* implemented here:
+ *  - No permissions defined to control access to the subscription
+ *  - No user page defined to manage subscriptions of the type defined here
+ *  - No use of 'object types' (rather than a simple subscription field).
  */
 
 /**
