@@ -2,11 +2,11 @@
 
 /**
  * @file
- * Defines vocabulary subscription using a notifications 'object type'.
+ * Defines vocabulary subscription using a notifications 'object_type'.
  * 
  * This module builds on notifications_vocabulary_1 by using the 'object types'
  * operation in hook_notifications. Functionally, this module should be
- * identical although some elements of UI will look different.
+ * identical although some elements of UI will be different.
  * 
  * Again, no access restrictions are being imposed anywhere.
  */
@@ -16,8 +16,9 @@
  */
 function notifications_vocabulary_2_menu() {
 
-  // Defines a path to a an autocomplete callback. This will be called when a
-  // user creates a subscription using their user-specific subscription page at
+  // Defines a path to an autocomplete callback.
+  // This will be called when a user enters text in the Vocabulary text box on
+  // the user-specific page where they add a Vocabulary2 subscription:
   //   /user/%/notifications/add/vocabulary2
   $items['notifications/autocomplete/vocabulary2/name'] = array(
     'title' => 'Vocabulary2 autocomplete',
@@ -67,7 +68,6 @@ function notifications_vocabulary_2_notifications($op, &$arg0 = NULL, $arg1 = NU
         // 'vocabulary2' description type (at least in English).
         'description' => t('Subscribe to all content tagged with a term of a vocabulary.'),
       );
-
       return $types;
 
     break;
@@ -94,27 +94,65 @@ function notifications_vocabulary_2_notifications($op, &$arg0 = NULL, $arg1 = NU
         
         // The type of value that this field should contain. A PHP type.
         'type' => 'int',
-        
-        // NOTE: Most text keys required by the notifications system use
-        // spaces, but this key uses an underscore. Potentially lots of fun if
-        // you forget.
+
+        // Rather than use an 'options callback' (as was done in module
+        // notifications_vocabulary_1), we are defining an 'object_type'.
+        // The only difference I've noticed so far, is that this allows the
+        // use of an autocomplete text box, rather than a select, for a user
+        // to choose which vocabulary to subscribe to.
+        // NOTE: I have cut-and-paste and then modified notifications code from
+        // other modules and have noticed that some multiword keys have under-
+        // scores while others have spaces. Not sure whether there's a rule to
+        // follow. I guess it's something to double check if things go wrong.
         'object_type' => 'vocabulary2',
       );
       return $fields;
     
     break;
     
+    // The notifications_content module says of this op, "Define object types
+    // for use by events and subscriptions"
+    // In this module, we are using the op to define an object type for use by
+    // the vocabulary subscription field above.
     case 'object types':
 
       notifications_include('object.inc');
  
       $types['vocabulary2'] = array(
+      
+        // Both the subscription field and the object type have a 'name' field.
+        // @todo Change one of the 'name' values to see what is affected. 
         'name' => t('Vocabulary2'),
+        
+        // Presumably, this identifies the field within an object (in this case
+        // a vocabulary) that is the value stored by the relevant field (in this
+        // case the vocabulary ID).
+        // @todo Change this to see what is affected.
         'key_field' => 'vid',
+        
+        // The name of a function to load a relevant type from the value stored
+        // in the relevant subscription field. (vocabulary from vid here)
         'load callback' => 'taxonomy_vocabulary_load',
+        
+        // Path to a MENU_CALLBACK to handle autocomplete behaviour. The
+        // string being autocompleted is a user-readable identifier of the
+        // field value. (vocabulary name here)
         'autocomplete path' => 'notifications/autocomplete/vocabulary2/name',
+        
+        // Another automcomplete, but in this case a conventional callback
+        // function rather than a MENU_CALLBACK. I've not actually seen this
+        // called yet. (Would I need to disable Javascript?)
         'autocomplete callback' => '_notifications_vocabulary_2_vid2autocomplete',
+        
+        // A callback function to convert from field stored value to user-
+        // readable identifier. (vocabulary ID to vocabulary name here)
         'format callback' => '_notifications_vocabulary_2_vid2name',
+        
+        // A function to convert from user-readable identifier to field stored
+        // value. (vocabulary name to vocabulary ID here)
+        // NOTE: This function will be used to convert the value from an
+        // autocomplete text box so (depending on the autocomplete function you
+        // use) may need to handle a string of the form 
         'value callback' => '_notifications_vocabulary_2_name2vid',
       );     
       return $types;
