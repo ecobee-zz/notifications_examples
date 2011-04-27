@@ -66,7 +66,7 @@ function notifications_vocabulary_2_notifications($op, &$arg0 = NULL, $arg1 = NU
         
         // Where appropriate, a user will see this description of the
         // 'vocabulary2' description type (at least in English).
-        'description' => t('Subscribe to all content tagged with a term of a vocabulary.'),
+        'description' => t('Subscribe to all content tagged with any term of a given vocabulary.'),
       );
       return $types;
 
