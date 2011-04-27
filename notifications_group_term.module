@@ -2,24 +2,17 @@
 
 /**
  * @file
- * Defines a Notifications vocabulary subscription type, very minimally.
- *
- * Steps implemented here to define a subscription:
- *  - Define a subscription type
- *  - Define a subscription field
- *  - Extract 'conditions' from relevant content to allow the notifications
- *    system to determine when a notification is required.
+ * Defines a Notifications subscription type for taxonomy term used in OG group.
  * 
- * Other, less vital, steps implemented:
- *  - Extract subscriptions relevant to current content to allow the
- *    notifications system to present (un)subscribe links to the user.
- *    This is included because it adds UI (subscription links in nodes) that
- *    our audience might use as their main subscription method.
+ * Using lessons learnt from implementing notifications_vocabulary_1 and _2,
+ * create a subscription type that reuses some of the functionality from
+ * notifications_tags and og_notifications (as well as cut-and-paste of code
+ * from same). Originally, I tried to reuse 'subscription fields' defined in
+ * those two modules but now think this is not possible.
  * 
- * Steps *not* implemented here:
- *  - No permissions defined to control access to the subscription
- *  - No user page defined to manage subscriptions of the type defined here
- *  - No use of 'object types' (rather than a simple subscription field).
+ * This module was developed with:
+ *  - notifications-6.x-4.0-beta7
+ *  - og-6.x-2.1
  */
 
 /**
@@ -34,10 +27,9 @@ function notifications_group_term_notifications($op, &$arg0 = NULL, $arg1 = NULL
 
     // This op gives the programmer the chance to define one or more
     // subscription types. A subscription type defines the conditions under
-    // which a user will recieve a notification. It relies an event type and
-    // one or more fields (see below).
+    // which a user will receive a notification. It relies on an event type
+    // and one or more fields (see below).
     case 'subscription types' :
-      //dsm( 'hook_notifications : subscription types' );
     
       $types['group-term'] = array(
 
@@ -47,18 +39,17 @@ function notifications_group_term_notifications($op, &$arg0 = NULL, $arg1 = NULL
         // of the hook_notifications implementation.
         'event_type' => 'node',
         
-        // This subscription type will be presented to the user as 'Vocabulary'
+        // This subscription type will be presented to the user as 'Group term'
         // (at least in English).
         'title' => t('Group term'),
         
-        // This module defines a single subscription field ('vocabulary') and
-        // that that field is used by this subscription type.
+        // This module defines two subscription fields.
         // See the 'subscription fields' op below for a description of what a
         // subscription field is.
         'fields' => array('group-term-group', 'group-term-term'),
         
-        // Where appropriate, a user will see this description of the
-        // 'vocabulary' description type (at least in English).
+        // Where appropriate, a user will see this description of the 'Group
+        // term' subcription type (at least in English).
         'description' => t('Subscribe to all content, within a given group, tagged with a given term.'),
       );
 
@@ -71,32 +62,15 @@ function notifications_group_term_notifications($op, &$arg0 = NULL, $arg1 = NULL
     // a piece of content as suitable for triggering notifications for a given
     // subscription.
     case 'subscription fields' :
-      //dsm( 'notifications_group_term : subscription fields' );
-    
-      //$fields['vocabulary'] = array(
-      
-        //// This subscription field will be presented to the user as 'Vocabulary'
-        //// (at least in English).
-        //'name' => t('Vocabulary'),
-        
-        //// @todo  - play with the name supplied here and the name of the
-        //// subscription field key to see what effect they have on behaviour: At
-        //// the moment, it looks like our field has a field. Is this the case or
-        //// is this used for the name of the field rather than the 'vocabulary'
-        //// key above?
-        //'field' => 'vocabulary',
-        
-        //// The type of value that this field should contain. A PHP type.
-        //'type' => 'int',
-        
-        //// A callback function that will return an array of options for this
-        //// field. Each option should have an key of the type we have just
-        //// defined (above) and a descriptive value for the benefit of users.
-        //'options callback' => '_notifications_group_term_vocabulary_field_options',
-      //);
-      
-      notifications_include( 'node.inc' );
 
+      // Include this file in order to access notifications_node_nid2title()
+      notifications_include( 'node.inc' );
+      
+      // For a more detailed description of various subscription fields keys,
+      // see same section of notifications_vocabulary_1 or _2
+      
+      // This field is mostly cut and paste from the 'group' field in
+      // og_notifications.
       $fields['group-term-group'] = array(
         'name' => t('OG group'),
         'field' => 'group-term-group',
@@ -104,9 +78,13 @@ function notifications_group_term_notifications($op, &$arg0 = NULL, $arg1 = NULL
         'options callback' => '_notification_group_term_group_options',
         'format callback' => 'notifications_node_nid2title'
       );
+      
+      // This field is more or less cut-and-paste from the 'tid' field in
+      // notifications_tags. It reuses the 'term' object type which is also
+      // defined in that module.
       $fields['group-term-term'] = array(
         'name' => t('Taxonomy term'),
-        'field' => 'tid',
+        'field' => 'group-term-term',
         'type' => 'int',
         'object_type' => 'term',
       );
@@ -114,36 +92,28 @@ function notifications_group_term_notifications($op, &$arg0 = NULL, $arg1 = NULL
       return $fields;
     
     break;
-
-    //case 'object types':
-      //$types['group-term-term'] = array(
-        //'name' => t('Taxonomy term'),
-        //'key' => 'tid',
-        //'load callback' => 'taxonomy_get_term',
-        //'autocomplete path' => 'notifications_tags/autocomplete',
-        //'format callback' => 'notifications_tags_term_name',
-        //'value callback' => 'notifications_tags_term_tid',
-        //'access' => 'access content',
-      //);
-      //return $types;
-    //break;
   }
 }
 
-///**
- //* Get a list of possible options for the 'vocabulary' subscription field.
- //* 
- //* @return
- //*   An array of all vocabularies in the form ( vid => name )
- //*/
-//function _notifications_group_term_vocabulary_field_options() {
-  //$vocabs = taxonomy_get_vocabularies();
-  //$options = array();
-  //foreach ( $vocabs as $vocab ) {
-    //$options[$vocab->vid] = $vocab->name;
-  //}
-  //return $options;
-//}
+/**
+ * Get available groups to present to user when creating a new subscription.
+ * 
+ * Wraps a function in og_notifications intended for the same purpose but adds
+ * code explain why no groups might be available.
+ * 
+ * @return
+ *   An array of groups ( nid => name )
+ */
+function _notification_group_term_group_options() {
+  
+  $options = og_notifications_groups();
+  
+  if ( empty( $options ) ) {
+    $options[-1] = t( 'You do not belong to any groups!' );
+  }
+
+  return $options;
+}
 
 /**
  * Implementation of hook_notifications_object_node()
@@ -157,8 +127,6 @@ function notifications_group_term_notifications_object_node($op, $node, $account
     // from the relevant content, which the notifications system can compare to
     // subscriptions in order to determine whether to trigger a notification.
     case 'conditions':
-      //dsm( 'hook_notifications_object_node : conditions' );
-//      dsm( $node );
 
       $conditions = array();
       
@@ -185,7 +153,6 @@ function notifications_group_term_notifications_object_node($op, $node, $account
     // NOTE: The 'Vocabulary' subscription type will still function if this op
     // is commented out. 
     case 'subscriptions':
-      //dsm( 'hook_notifications_object_node : subscriptions' );
     
       $options = array();
       if ( notifications_subscription_type_enabled('group-term') ) {
@@ -293,29 +260,4 @@ function _notifications_group_term_ids_from_node( $node ) {
   }
   
   return $result;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function _notification_group_term_group_options() {
-  
-  $options = og_notifications_groups();
-  
-  if ( empty( $options ) ) {
-    $options[-1] = t( 'You do not belong to any groups!' );
-//    $options[-1] = '<div class="messages error">' . t( 'You do not belong to any groups!' ) . '</div>';
-  }
-
-  return $options;
 }
