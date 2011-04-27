@@ -164,10 +164,19 @@ function notifications_vocabulary_2_notifications($op, &$arg0 = NULL, $arg1 = NU
 /**
  * Menu callback - Retrieve a JSON object containing autocomplete suggestions.
  * 
- * This autocomplete function is made accessible by being the page callback for
- * a menu item defined in hook_menu (above). The path to that menu item is
- * used as the value for the 'autocomplete callback' key in the
+ * Take some text and return a set of suggested vocabulary names that the text
+ * might be the start of.
+ * 
+ * NOTE: This autocomplete function is made accessible by being the 'page
+ * callback' for a menu item defined in hook_menu (above). The path to that
+ * menu item is used as the value for the 'autocomplete callback' key in the
  * hook_notifications 'object types' operation (above).
+ * 
+ * @param $string
+ *   The text from which to suggest completions.
+ * 
+ * @return
+ *   An array of matches ( 'name [vid:x]' => '<div ...>name</div>' )
  */
 function _notifications_vocabulary_2_autocomplete($string = '') {
   $matches = array();
@@ -184,9 +193,11 @@ function _notifications_vocabulary_2_autocomplete($string = '') {
 }
 
 /**
- * Get a string representation of a vocabulary from its ID.
+ * Get a user-readable representation of a vocabulary from its ID.
  * 
- * This function is called from the user specific admin page at
+ * Take a vocabulary ID and return the relevant vocabulary's name.
+ * 
+ * NOTE: This function is called from the user specific admin page at
  *   /user/%/notifications/subscriptions
  * in order to show vocabularies as names rather than numbers.
  * 
@@ -207,16 +218,21 @@ function _notifications_vocabulary_2_vid2name($vid, $html = FALSE) {
 }
 
 /**
- * Convert from vocabulary name or autocomplete value (name [vid:x]) to vid.
+ * Convert a vocabulary name or autocomplete value (name [vid:x]) to vid.
  * 
- * This callback is called when a user creates a subscription using their
- * user-specific subscription at
+ * NOTE: This callback is called when a user creates a Vocabulary2 subscription
+ * using their user-specific page at
  *   /user/%/notifications/add/vocabulary2
- * When the page is submitted, this fn determines the correct vocabulary ID in
- * order to parameterise the new subscription correctly.
+ * When the page is submitted, this fn determines the correct vocabulary ID,
+ * from the autocomplete text, to parameterise the new subscription correctly.
+ * 
+ * @param $string
+ *   The text from which to determine the vocabulary ID.
+ * 
+ * @return
+ *   A vocabualry ID, or NULL on failure.
  */
 function _notifications_vocabulary_2_name2vid($string, $field = NULL, $types = array()) {
-  dsm( $string );
   if (!empty($string)) {
     preg_match('/^(?:\s*|(.*) )?\[\s*vid\s*:\s*(\d+)\s*\]$/', $string, $matches);
     if (!empty($matches)) {
@@ -237,7 +253,6 @@ function _notifications_vocabulary_2_name2vid($string, $field = NULL, $types = a
       }
     }
   }
-  dsm( $vid );
   return !empty($vid) ? $vid : NULL;  
 }
 
