@@ -16,6 +16,16 @@
  * Built using lessons learnt from implementing notifications_vocabulary_1 and
  * _2. Like thse modules, this one does not define any permissions to control
  * access.
+ * 
+ * @todo Control where subscription links appear. Checking for the subscription
+ * type being enabled is not enough.
+ * 
+ * @todo Whether previous todo is done or not, put comment to this effect in
+ * code so that developer audience knows this is necessary.
+ * 
+ * @todo Be consistent in terms of what groups are available in the user-
+ * specific add-subscription page and the subscription links. i.e. Can users
+ * subscribe to content in groups of which they are not a member or not?
  */
 
 /**
@@ -133,19 +143,19 @@ function notifications_group_term_notifications_object_node($op, $node, $account
 
       $conditions = array();
       
-      $groups = _notifications_group_group_ids_from_node( $node );
+      $groups = _notifications_group_term_group_ids_from_node( $node );
       if ( $groups ) {
         $conditions['group-term-group'] = $groups;
       }
       
-      $terms = _notifications_group_term_ids_from_node( $node );
+      $terms = _notifications_group_term_term_ids_from_node( $node );
       if ( $terms ) {
         $conditions['group-term-term'] = $terms;
       }
       
-      dsm( $node );
-      dsm( $conditions );
-      dsm( og_get_group_context() );
+      //dsm( $node );
+      //dsm( $conditions );
+      //dsm( og_get_group_context() );
       
       return $conditions;
 
@@ -153,38 +163,46 @@ function notifications_group_term_notifications_object_node($op, $node, $account
 
     // This op is called in order to present the user with a set of subscription
     // (and unsubscription) links relevant to the content that they are viewing.
-    // NOTE: The 'Vocabulary' subscription type will still function if this op
-    // is commented out. 
+    // As we have multiple fields in this subscription, there is the potential
+    // for a lot of options if cross-group posting is permitted!
     case 'subscriptions':
     
       $options = array();
       if ( notifications_subscription_type_enabled('group-term') ) {
+    
+        $groups = array();
+        $group_ids = _notifications_group_term_group_ids_from_node( $node, $groups );
+        if ( empty( $groups ) ) {
+          break;
+        }
         
-        $groups = $node->og_groups;
-        $terms = $node->taxonomy;
-        
-        // Is the current node devoid of group context or taxonomy terms?
-        if ( !$groups  ||  !$terms ) {
+        $terms = array();
+        $term_ids = _notifications_group_term_term_ids_from_node( $node, $terms );
+        if ( empty( $terms ) ) {
           break;
         }
         
         foreach ( $terms as $term ) {
           foreach ( $groups as $group ) {
 
-            //$options[] = array(
+            $options[] = array(
               
-              //// The text of the link to be shown to the user
-              //'name' => t('Posts tagged from vocabulary "@vocab"', array('@vocab' => $vocab->name )),
+              // The text of the link to be shown to the user
+              'name' => t('Posts tagged with "@term" in the "@group" group',
+                array('@term' => $term->name, '@group' => $group->title ) ),
               
-              //// The relevant subscription type. (The notifications system will
-              //// create a subscription of this type in response to a click on the
-              //// link.)
-              //'type' => 'vocabulary',
+              // The relevant subscription type. (The notifications system will
+              // create a subscription of this type in response to a click on the
+              // link.)
+              'type' => 'group-term',
               
-              //// The relevant subscription fields (only one in our case) and the
-              //// value for each field to be used to create the subscription.
-              //'fields' => array('vocabulary' => $vid),
-            //);
+              // The relevant subscription fields (only one in our case) and the
+              // value for each field to be used to create the subscription.
+              'fields' => array(
+                'group-term-group' => $group->nid,
+                'group-term-term' => $term->tid,
+              ),
+            );
           }
         }
       }
@@ -199,11 +217,13 @@ function notifications_group_term_notifications_object_node($op, $node, $account
  * 
  * @param $node
  *   A node object
- *
+ * @param $group_nodes
+ *   Output - If this is an array then relevant group objects will be added.
+ * 
  * @return
  *   An array, either empty or containing group node IDs ( nid => nid ).
  */
-function _notifications_group_group_ids_from_node( $node ) {
+function _notifications_group_term_group_ids_from_node( $node, &$group_nodes=NULL ) {
  
   // Does the node have no taxonomy terms associated with it?
   if ( ! isset( $node->og_groups )
@@ -218,12 +238,19 @@ function _notifications_group_group_ids_from_node( $node ) {
 
     if ( is_object( $group ) ) {
       $result[$group->nid] = $group->nid;
+      if ( is_array( $group_nodes ) ) {
+        $group_nodes[] = $group;
+      }
     } else {
       $result[$group] = $group;
+      if ( is_array( $group_nodes ) ) {
+        $group_nodes[] = node_load( $group );
+      }
     }
+    
   }
   
-  if ( empty( $groups ) ) {
+  if ( empty( $result ) ) {
     $group_context = og_get_group_context();
     if ( $group_context ) {
       $result[$group_context->nid] = $group_context->nid;
@@ -238,11 +265,13 @@ function _notifications_group_group_ids_from_node( $node ) {
  * 
  * @param $node
  *   A node object
+ * @param $terms
+ *   Output - If this is an array then relevant term objects will be added.
  *
  * @return
  *   An array, either empty or containing term IDs ( tid => tid ).
  */
-function _notifications_group_term_ids_from_node( $node ) {
+function _notifications_group_term_term_ids_from_node( $node, &$terms=NULL ) {
  
   // Does the node have no taxonomy terms associated with it?
   if ( ! isset( $node->taxonomy )
@@ -257,9 +286,16 @@ function _notifications_group_term_ids_from_node( $node ) {
 
     if ( is_object( $term ) ) {
       $result[$term->tid] = $term->tid;
+      if ( is_array( $terms ) ) {
+        $terms[] = $term;
+      }
     } else {
       $result[$term] = $term;
+      if ( is_array( $terms ) ) {
+        $terms[] = taxonomy_get_term( $term );
+      }
     }
+    
   }
   
   return $result;
