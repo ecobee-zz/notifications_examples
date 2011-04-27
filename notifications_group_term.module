@@ -17,6 +17,9 @@
  * _2. Like thse modules, this one does not define any permissions to control
  * access.
  * 
+ * @todo Add permissions to control access to our subscription type. It's not
+ * going to be generally useful til we do that.
+ * 
  * @todo Control where subscription links appear. Checking for the subscription
  * type being enabled is not enough.
  * 
