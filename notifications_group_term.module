@@ -4,8 +4,7 @@
  * @file
  * Defines a Notifications subscription type for taxonomy term used in OG group.
  * 
- * Using lessons learnt from implementing notifications_vocabulary_1 and _2,
- * create a subscription type that reuses some of the functionality from
+ * The subscription type defined here reuses some of the functionality from
  * notifications_tags and og_notifications (as well as cut-and-paste of code
  * from same). Originally, I tried to reuse 'subscription fields' defined in
  * those two modules but now think this is not possible.
@@ -13,6 +12,10 @@
  * This module was developed with:
  *  - notifications-6.x-4.0-beta7
  *  - og-6.x-2.1
+ * 
+ * Built using lessons learnt from implementing notifications_vocabulary_1 and
+ * _2. Like thse modules, this one does not define any permissions to control
+ * access.
  */
 
 /**

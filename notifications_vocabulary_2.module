@@ -9,6 +9,9 @@
  * identical although some elements of UI will be different.
  * 
  * Again, no access restrictions are being imposed anywhere.
+ * 
+ * This module was developed with:
+ *  - notifications-6.x-4.0-beta7
  */
 
 /**
@@ -41,8 +44,8 @@ function notifications_vocabulary_2_notifications($op, &$arg0 = NULL, $arg1 = NU
 
     // This op gives the programmer the chance to define one or more
     // subscription types. A subscription type defines the conditions under
-    // which a user will recieve a notification. It relies an event type and
-    // one or more fields (see below).
+    // which a user will receive a notification. It relies on an event type
+    // and one or more fields (see below).
     case 'subscription types' :
       //dsm( 'hook_notifications : subscription types' );
     
@@ -65,7 +68,7 @@ function notifications_vocabulary_2_notifications($op, &$arg0 = NULL, $arg1 = NU
         'fields' => array('vocabulary2'),
         
         // Where appropriate, a user will see this description of the
-        // 'vocabulary2' description type (at least in English).
+        // 'vocabulary2' subcription type (at least in English).
         'description' => t('Subscribe to all content tagged with any term of a given vocabulary.'),
       );
       return $types;
@@ -88,8 +91,8 @@ function notifications_vocabulary_2_notifications($op, &$arg0 = NULL, $arg1 = NU
         // @todo  - play with the name supplied here and the name of the
         // subscription field key to see what effect they have on behaviour: At
         // the moment, it looks like our field has a field. Is this the case or
-        // is this used for the name of the field rather than the 'vocabulary2'
-        // key above?
+        // is this used for the machine name of the field rather than the
+        // 'vocabulary2' key above?
         'field' => 'vocabulary2',
         
         // The type of value that this field should contain. A PHP type.
