@@ -1,0 +1,7 @@
+; $Id
+name = Notifications group term
+description = Defines a subscription type for a given taxonomy term in a given OG group.
+package = "Notifications examples"
+dependencies[] = notifications_tags
+dependencies[] = og_notifications
+core = 6.x

@@ -1,0 +1,321 @@
+<?php
+
+/**
+ * @file
+ * Defines a Notifications vocabulary subscription type, very minimally.
+ *
+ * Steps implemented here to define a subscription:
+ *  - Define a subscription type
+ *  - Define a subscription field
+ *  - Extract 'conditions' from relevant content to allow the notifications
+ *    system to determine when a notification is required.
+ * 
+ * Other, less vital, steps implemented:
+ *  - Extract subscriptions relevant to current content to allow the
+ *    notifications system to present (un)subscribe links to the user.
+ *    This is included because it adds UI (subscription links in nodes) that
+ *    our audience might use as their main subscription method.
+ * 
+ * Steps *not* implemented here:
+ *  - No permissions defined to control access to the subscription
+ *  - No user page defined to manage subscriptions of the type defined here
+ *  - No use of 'object types' (rather than a simple subscription field).
+ */
+
+/**
+ * Implementation of hook_notifications.
+ *
+ * Defines a vocabulary subscription type and its single field, also called
+ * vocabulary.
+ */
+function notifications_group_term_notifications($op, &$arg0 = NULL, $arg1 = NULL, $arg2 = NULL) {
+
+  switch ($op) {
+
+    // This op gives the programmer the chance to define one or more
+    // subscription types. A subscription type defines the conditions under
+    // which a user will recieve a notification. It relies an event type and
+    // one or more fields (see below).
+    case 'subscription types' :
+      //dsm( 'hook_notifications : subscription types' );
+    
+      $types['group-term'] = array(
+
+        // This subscription type will create a notifications of 'node' events.
+        // Point of interest: Three 'node' events (insert, update, comment) are
+        // defined in the notifications_content module, in the 'event types' op
+        // of the hook_notifications implementation.
+        'event_type' => 'node',
+        
+        // This subscription type will be presented to the user as 'Vocabulary'
+        // (at least in English).
+        'title' => t('Group term'),
+        
+        // This module defines a single subscription field ('vocabulary') and
+        // that that field is used by this subscription type.
+        // See the 'subscription fields' op below for a description of what a
+        // subscription field is.
+        'fields' => array('group-term-group', 'group-term-term'),
+        
+        // Where appropriate, a user will see this description of the
+        // 'vocabulary' description type (at least in English).
+        'description' => t('Subscribe to all content, within a given group, tagged with a given term.'),
+      );
+
+      return $types;
+
+    break;
+    
+    // This op gives the programmer the chance to define one or more
+    // subscription fields. A subscription field defines a property that marks
+    // a piece of content as suitable for triggering notifications for a given
+    // subscription.
+    case 'subscription fields' :
+      //dsm( 'notifications_group_term : subscription fields' );
+    
+      //$fields['vocabulary'] = array(
+      
+        //// This subscription field will be presented to the user as 'Vocabulary'
+        //// (at least in English).
+        //'name' => t('Vocabulary'),
+        
+        //// @todo  - play with the name supplied here and the name of the
+        //// subscription field key to see what effect they have on behaviour: At
+        //// the moment, it looks like our field has a field. Is this the case or
+        //// is this used for the name of the field rather than the 'vocabulary'
+        //// key above?
+        //'field' => 'vocabulary',
+        
+        //// The type of value that this field should contain. A PHP type.
+        //'type' => 'int',
+        
+        //// A callback function that will return an array of options for this
+        //// field. Each option should have an key of the type we have just
+        //// defined (above) and a descriptive value for the benefit of users.
+        //'options callback' => '_notifications_group_term_vocabulary_field_options',
+      //);
+      
+      notifications_include( 'node.inc' );
+
+      $fields['group-term-group'] = array(
+        'name' => t('OG group'),
+        'field' => 'group-term-group',
+        'type' => 'int',
+        'options callback' => '_notification_group_term_group_options',
+        'format callback' => 'notifications_node_nid2title'
+      );
+      $fields['group-term-term'] = array(
+        'name' => t('Taxonomy term'),
+        'field' => 'tid',
+        'type' => 'int',
+        'object_type' => 'term',
+      );
+
+      return $fields;
+    
+    break;
+
+    //case 'object types':
+      //$types['group-term-term'] = array(
+        //'name' => t('Taxonomy term'),
+        //'key' => 'tid',
+        //'load callback' => 'taxonomy_get_term',
+        //'autocomplete path' => 'notifications_tags/autocomplete',
+        //'format callback' => 'notifications_tags_term_name',
+        //'value callback' => 'notifications_tags_term_tid',
+        //'access' => 'access content',
+      //);
+      //return $types;
+    //break;
+  }
+}
+
+///**
+ //* Get a list of possible options for the 'vocabulary' subscription field.
+ //* 
+ //* @return
+ //*   An array of all vocabularies in the form ( vid => name )
+ //*/
+//function _notifications_group_term_vocabulary_field_options() {
+  //$vocabs = taxonomy_get_vocabularies();
+  //$options = array();
+  //foreach ( $vocabs as $vocab ) {
+    //$options[$vocab->vid] = $vocab->name;
+  //}
+  //return $options;
+//}
+
+/**
+ * Implementation of hook_notifications_object_node()
+ */
+function notifications_group_term_notifications_object_node($op, $node, $account = NULL) {
+
+  switch ($op) {
+    
+    // This op is called whenever an event, of an event type known to the
+    // notifications system, occurs. Our module gets the chance to extract data
+    // from the relevant content, which the notifications system can compare to
+    // subscriptions in order to determine whether to trigger a notification.
+    case 'conditions':
+      //dsm( 'hook_notifications_object_node : conditions' );
+//      dsm( $node );
+
+      $conditions = array();
+      
+      $groups = _notifications_group_group_ids_from_node( $node );
+      if ( $groups ) {
+        $conditions['group-term-group'] = $groups;
+      }
+      
+      $terms = _notifications_group_term_ids_from_node( $node );
+      if ( $terms ) {
+        $conditions['group-term-term'] = $terms;
+      }
+      
+      dsm( $node );
+      dsm( $conditions );
+      dsm( og_get_group_context() );
+      
+      return $conditions;
+
+    break;
+
+    // This op is called in order to present the user with a set of subscription
+    // (and unsubscription) links relevant to the content that they are viewing.
+    // NOTE: The 'Vocabulary' subscription type will still function if this op
+    // is commented out. 
+    case 'subscriptions':
+      //dsm( 'hook_notifications_object_node : subscriptions' );
+    
+      $options = array();
+      if ( notifications_subscription_type_enabled('group-term') ) {
+        
+        $groups = $node->og_groups;
+        $terms = $node->taxonomy;
+        
+        // Is the current node devoid of group context or taxonomy terms?
+        if ( !$groups  ||  !$terms ) {
+          break;
+        }
+        
+        foreach ( $terms as $term ) {
+          foreach ( $groups as $group ) {
+
+            //$options[] = array(
+              
+              //// The text of the link to be shown to the user
+              //'name' => t('Posts tagged from vocabulary "@vocab"', array('@vocab' => $vocab->name )),
+              
+              //// The relevant subscription type. (The notifications system will
+              //// create a subscription of this type in response to a click on the
+              //// link.)
+              //'type' => 'vocabulary',
+              
+              //// The relevant subscription fields (only one in our case) and the
+              //// value for each field to be used to create the subscription.
+              //'fields' => array('vocabulary' => $vid),
+            //);
+          }
+        }
+      }
+      return $options;
+      
+    break;
+  }
+}
+
+/**
+ * Gets the group node IDs of any group context of a node.
+ * 
+ * @param $node
+ *   A node object
+ *
+ * @return
+ *   An array, either empty or containing group node IDs ( nid => nid ).
+ */
+function _notifications_group_group_ids_from_node( $node ) {
+ 
+  // Does the node have no taxonomy terms associated with it?
+  if ( ! isset( $node->og_groups )
+       ||  ! is_array( $node->og_groups )
+       ||  empty( $node->og_groups ) ) {
+    return array();
+  }
+  
+  $result = array();
+  
+  foreach ( $node->og_groups as $group ) {
+
+    if ( is_object( $group ) ) {
+      $result[$group->nid] = $group->nid;
+    } else {
+      $result[$group] = $group;
+    }
+  }
+  
+  if ( empty( $groups ) ) {
+    $group_context = og_get_group_context();
+    if ( $group_context ) {
+      $result[$group_context->nid] = $group_context->nid;
+    }
+  }
+  
+  return $result;
+}
+
+/**
+ * Gets the term IDs of any taxonomy terms associated with a node.
+ * 
+ * @param $node
+ *   A node object
+ *
+ * @return
+ *   An array, either empty or containing term IDs ( tid => tid ).
+ */
+function _notifications_group_term_ids_from_node( $node ) {
+ 
+  // Does the node have no taxonomy terms associated with it?
+  if ( ! isset( $node->taxonomy )
+       ||  ! is_array( $node->taxonomy )
+       ||  empty( $node->taxonomy ) ) {
+    return array();
+  }
+  
+  $result = array();
+  
+  foreach ( $node->taxonomy as $term ) {
+
+    if ( is_object( $term ) ) {
+      $result[$term->tid] = $term->tid;
+    } else {
+      $result[$term] = $term;
+    }
+  }
+  
+  return $result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function _notification_group_term_group_options() {
+  
+  $options = og_notifications_groups();
+  
+  if ( empty( $options ) ) {
+    $options[-1] = t( 'You do not belong to any groups!' );
+//    $options[-1] = '<div class="messages error">' . t( 'You do not belong to any groups!' ) . '</div>';
+  }
+
+  return $options;
+}
